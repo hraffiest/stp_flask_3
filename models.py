@@ -11,7 +11,7 @@ class Event(db.Model):
     time = db.Column(db.DateTime, nullable=False)
     type = db.Column(db.String, nullable=False)
     category = db.Column(db.String, nullable=False)
-    location = db.relationship('Location', back_populates="events")
+    location = db.relationship('Location')
     address = db.Column(db.String, nullable=False)
     seats = db.Column(db.Integer, nullable=False)
     participants = db.relationship('Participant', back_populates="events")
@@ -25,6 +25,17 @@ class Participant(db.Model):
     password = db.Column(db.String, nullable=False)
     picture = db.Column(db.String)
     location = db.Column(db.String)
-    enrollmants = db.relationship('Enrollment', back_populates="participant")
+    enrollments = db.relationship('Enrollment', back_populates="participant")
     about = db.Column(db.String)
 
+
+class Enrollment(db.Model):
+    __tablename__ = 'enrollments'
+    event = db.relationship('Event')
+    participant = db.relationship('Participant', back_populates="enrollments")
+
+
+class Location(db.Model):
+    __tablename__ = 'locations'
+    title = db.Column(db.String)
+    code = db.Column(db.String)
