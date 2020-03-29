@@ -13,9 +13,9 @@ class Event(db.Model):
     category = db.Column(db.String, nullable=False)
     address = db.Column(db.String, nullable=False)
     seats = db.Column(db.Integer, nullable=False)
-    loc_id = db.Column(db.Integer, db.ForeignKey("locations.id"))
+    loc_id = db.Column(db.Integer, db.ForeignKey("locations.l_id"))
     location = db.relationship('Location', back_populates="events")
-    participants = db.relationship('Participant', back_populates="events")
+    participants = db.relationship('Participant', back_populates="event")
     enrollments = db.relationship('Enrollment', back_populates="event")
 
 
@@ -28,21 +28,24 @@ class Participant(db.Model):
     picture = db.Column(db.String)
     location = db.Column(db.String)
     enrollments = db.relationship('Enrollment', back_populates="participant")
-    events = db.relationship('Event', back_populates="participants")
+    event_id = db.Column(db.Integer, db.ForeignKey("events.e_id"))
+    event = db.relationship('Event', back_populates="participants")
     about = db.Column(db.String)
 
 
 class Enrollment(db.Model):
     __tablename__ = 'enrollments'
-    event_id = db.Column(db.Integer, db.ForeignKey("events.id"))
+    enrol_id = db.Column(db.Integer, primary_key=True)
+    event_id = db.Column(db.Integer, db.ForeignKey("events.e_id"))
     event = db.relationship('Event', back_populates="enrollments")
-    part_id = db.Column(db.Integer, db.ForeignKey("participants.id"))
+    part_id = db.Column(db.Integer, db.ForeignKey("participants.p_id"))
     participant = db.relationship('Participant', back_populates="enrollments")
     datetime = db.Column(db.DateTime, nullable=False)
 
 
 class Location(db.Model):
     __tablename__ = 'locations'
+    l_id = db.Column(db.Integer, primary_key=True)
     events = db.relationship('Event', back_populates="location")
     title = db.Column(db.String, nullable=False)
     code = db.Column(db.String, nullable=False)
