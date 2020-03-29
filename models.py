@@ -6,9 +6,9 @@ db = SQLAlchemy()
 class Event(db.Model):
     __tablename__ = 'events'
     e_id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String)
     description = db.Column(db.String)
-    date = db.Column(db.DateTime, nullable=False)
-    time = db.Column(db.DateTime, nullable=False)
+    datetime = db.Column(db.DateTime, nullable=False)
     type = db.Column(db.String, nullable=False)
     category = db.Column(db.String, nullable=False)
     address = db.Column(db.String, nullable=False)
