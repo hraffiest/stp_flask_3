@@ -8,4 +8,5 @@ db.init_app(app)
 
 from views import *
 
-
+with app.app_context():
+    db.create_all()
