@@ -22,6 +22,7 @@ admin.add_view(NewModel(Enrollment, db.session))
 admin.add_view(NewModel(Participant, db.session))
 admin.add_view(NewModel(Event, db.session))
 
+
 from views import *
 
 with app.app_context():
