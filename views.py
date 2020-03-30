@@ -8,18 +8,17 @@ jwt = JWTManager(app)
 
 @app.route('/auth/', methods=['POST'])
 def login():
-    pass
-    # if not request.is_json:
-    #     return jsonify({"msg": "Missing JSON in request"}), 400
-    #
-    # username = request.json.get("username", "")
-    # password = request.json.get("password", "")
-    #
-    # if username != "test" or password != "test":
-    #     return jsonify({"msg": "Bad username or password"}), 401
-    #
-    # access_token = create_access_token(identity=username)
-    # return jsonify(access_token=access_token)
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request"}), 400
+
+    username = request.json.get("username", "")
+    password = request.json.get("password", "")
+
+    if not db.session.query(Participant).filter(Participant.email == username) or password != "test":
+        return jsonify({"msg": "Bad username or password"}), 401
+
+    access_token = create_access_token(identity=username)
+    return jsonify(access_token=access_token)
 
 
 @app.route("/locations/", methods=["GET"])
@@ -74,17 +73,21 @@ def get_events_list():
     return jsonify(events_dict)
 
 
-@app.route("/enrollments/<int:eventid>", methods=["POST", "DELETE"])
-def enrollments(eventid):
+@app.route("/enrollments/<int:event_id>", methods=["POST", "DELETE"])
+def enrollments(event_id):
     if request.method == 'POST':
-        enroll = db.session.query(Enrollment).filter(Enrollment.event_id == eventid).first()
-        event = db.session.query(Event).get(eventid)
+        enroll = db.session.query(Enrollment).filter(Enrollment.event_id == event_id).first()
+        event = db.session.query(Event).get(event_id)
         if not enroll or len(enroll) > event.seats:
             return jsonify(status='success')
         else:
             return jsonify(status='error')
 
-    pass
+    elif request.method == 'DELETE':
+        enrolls = db.session.query(Enrollment).filter(Enrollment.event_id == event_id).all()
+        db.session.delete(enrolls)
+        db.session.commit(synchronize_session=False)
+        return jsonify(status='success')
 
 
 @app.route('/register/', methods=['POST'])
