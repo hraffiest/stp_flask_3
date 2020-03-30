@@ -85,13 +85,25 @@ def enrollments(eventid):
             return jsonify(status='error')
 
     pass
-#
-#
-# @app.route('/register/', methods=['POST'])
-# def register():
-#     pass
-#
-#
-# @app.route("/profile/", methods=["GET"])
-# def get_profile():
-#     pass
+
+
+@app.route('/register/', methods=['POST'])
+def register():
+    name = request.args.get('name')
+    email = request.args.get('email')
+    location = request.args.get('location')
+    about = request.args.get('about')
+    pass
+
+
+@app.route("/profile/<int:u_id>", methods=["GET"])
+def get_profile(u_id):
+    user = db.session.query(Participant).get(u_id)
+    return jsonify(id=user.p_id,
+                   name=user.name,
+                   email=user.email,
+                   picture=user.picture,
+                   location=user.location,
+                   event_id=user.event_id,
+                   about=user.about
+                   )
