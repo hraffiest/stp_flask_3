@@ -101,8 +101,7 @@ def register():
                        password=password)
     db.session.add(user)
     db.session.commit()
-    delattr(user, password)
-    return jsonify(user)
+    return jsonify(email=user.email, name=user.name, about=user.about, picture=user.picture)
 
 
 @app.route("/profile/<int:u_id>", methods=["GET"])
