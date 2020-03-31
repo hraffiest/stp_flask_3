@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
@@ -15,7 +16,6 @@ class Event(db.Model):
     seats = db.Column(db.Integer, nullable=False)
     loc_id = db.Column(db.Integer, db.ForeignKey("locations.l_id"))
     location = db.relationship('Location', back_populates="events")
-    participants = db.relationship('Participant', back_populates="event")
     enrollments = db.relationship('Enrollment', back_populates="event")
 
 
@@ -24,13 +24,25 @@ class Participant(db.Model):
     p_id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
     email = db.Column(db.String, nullable=False)
-    password = db.Column(db.String, nullable=False)
+    _password = db.Column(db.String, nullable=False)
     picture = db.Column(db.String)
-    location = db.Column(db.String)
     enrollments = db.relationship('Enrollment', back_populates="participant")
-    event_id = db.Column(db.Integer, db.ForeignKey("events.e_id"))
-    event = db.relationship('Event', back_populates="participants")
     about = db.Column(db.String)
+
+    @property
+    def password(self):
+        # Запретим прямое обращение к паролю
+        raise AttributeError("Вам не нужно знать пароль!")
+
+    @password.setter
+    def password(self, password):
+        # Устанавливаем пароль через этот метод
+        self._password = generate_password_hash(password)
+
+    def password_valid(self, password):
+        # Проверяем пароль через этот метод
+        # Функция check_password_hash превращает password в хеш и сравнивает с хранимым
+        return check_password_hash(self._password, password)
 
 
 class Enrollment(db.Model):

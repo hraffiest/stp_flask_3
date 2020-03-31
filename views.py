@@ -10,7 +10,6 @@ jwt = JWTManager(app)
 def login():
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
-
     username = request.json.get("username", "")
     password = request.json.get("password", "")
 
@@ -34,8 +33,6 @@ def get_locations_list():
 def get_events_list():
     event_type = request.args.get('eventtype')
     location = request.args.get('location')
-    print(event_type)
-
     events = db.session.query(Event).all()
     events_typed = db.session.query(Event).filter(Event.type == event_type).all()
     events_locs = db.session.query(Event).filter(Event.loc_id == location).all()
@@ -81,8 +78,7 @@ def enrollments(event_id):
         if not enroll or len(enroll) > event.seats:
             return jsonify(status='success')
         else:
-            return jsonify(status='error')
-
+            return jsonify(erorr="Not enough seats"), 400
     elif request.method == 'DELETE':
         enrolls = db.session.query(Enrollment).filter(Enrollment.event_id == event_id).all()
         db.session.delete(enrolls)
@@ -94,19 +90,31 @@ def enrollments(event_id):
 def register():
     name = request.args.get('name')
     email = request.args.get('email')
-    location = request.args.get('location')
     about = request.args.get('about')
-    pass
+    password = request.args.get('password')
+    search_user = db.session.query(Participant).filter(Participant.email == email).first()
+    if search_user:
+        return jsonify(erorr='Already exist'), 400
+    user = Participant(name=name,
+                       email=email,
+                       about=about,
+                       password=password)
+    db.session.add(user)
+    db.session.commit()
+    delattr(user, password)
+    return jsonify(user)
 
 
 @app.route("/profile/<int:u_id>", methods=["GET"])
 def get_profile(u_id):
     user = db.session.query(Participant).get(u_id)
-    return jsonify(id=user.p_id,
-                   name=user.name,
-                   email=user.email,
-                   picture=user.picture,
-                   location=user.location,
-                   event_id=user.event_id,
-                   about=user.about
-                   )
+    if user:
+        return jsonify(id=user.p_id,
+                       name=user.name,
+                       email=user.email,
+                       picture=user.picture,
+                       location=user.location,
+                       event_id=user.event_id,
+                       about=user.about
+                       )
+    return jsonify(), 404
