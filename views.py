@@ -31,11 +31,15 @@ def get_locations_list():
 
 @app.route("/events/", methods=["GET"])
 def get_events_list():
+    events = db.session.query(Event).all()
     event_type = request.args.get('eventtype')
     location = request.args.get('location')
-    events = db.session.query(Event).all()
+    print(event_type,location)
+    print(events)
     events_typed = db.session.query(Event).filter(Event.type == event_type).all()
+    print(events_typed)
     events_locs = db.session.query(Event).filter(Event.loc_id == location).all()
+    print(events_locs)
     events_dict = []
     if event_type and not location:
         print(hasattr(Event, event_type))
@@ -51,8 +55,10 @@ def get_events_list():
             return jsonify(), 500
     elif location and event_type:
         print(3)
-        if hasattr(Event, location) and hasattr(Event, event_type):
-            events = events.order_by(getattr(Event, event_type))
+        if events_locs and events_typed:
+            events = db.session.query(Event).filter(db.and_(Event.location == location,
+                                                            Event.type == event_type))
+            print(events)
         else:
             return jsonify(), 500
     for e in events:
@@ -73,13 +79,14 @@ def get_events_list():
 @app.route("/enrollments/<int:event_id>", methods=["POST", "DELETE"])
 def enrollments(event_id):
     if request.method == 'POST':
-        enroll = db.session.query(Enrollment).filter(Enrollment.event_id == event_id).first()
+        enroll = db.session.query(Enrollment).filter(Enrollment.event_id == event_id).all()
         event = db.session.query(Event).get(event_id)
         if not enroll or len(enroll) > event.seats:
             return jsonify(status='success')
         else:
             return jsonify(erorr="Not enough seats"), 400
     elif request.method == 'DELETE':
+        user_id = request.args.get('user_id')
         enrolls = db.session.query(Enrollment).filter(Enrollment.event_id == event_id).all()
         db.session.delete(enrolls)
         db.session.commit(synchronize_session=False)
