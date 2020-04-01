@@ -49,11 +49,13 @@ def get_events_list():
             events = events_typed
         else:
             return jsonify(), 500
+
     elif location and not event_type:
         if events_locs:
             events = events_locs
         else:
             return jsonify(), 500
+
     elif location and event_type:
         if events_locs and events_typed:
             events = db.session.query(Event).filter(db.and_(Event.loc_id == location,
@@ -74,7 +76,7 @@ def get_events_list():
                                 location=db.session.query(Location).get(e.loc_id).title
                                 ))
 
-    return jsonify(events_dict)
+    return jsonify(events_dict), {'Location': f'/events/'}
 
 
 @app.route("/enrollments/<int:event_id>", methods=["POST", "DELETE"])
@@ -88,7 +90,7 @@ def enrollments(event_id):
         if not enroll or len(enroll) > event.seats:
             return jsonify(status='success'), 200
         else:
-            return jsonify(erorr="Not enough seats"), 400
+            return jsonify(erorr="Not enough seats")
 
     elif request.method == 'DELETE':
 
@@ -129,7 +131,10 @@ def register():
     db.session.add(user)
     db.session.commit()
 
-    return jsonify(email=user.email, name=user.name, about=user.about, picture=user.picture)
+    return jsonify(email=user.email,
+                   name=user.name,
+                   about=user.about,
+                   picture=user.picture), 201, {'Location': f'/participants/{user.u_id}'}
 
 
 @app.route("/profile/<int:u_id>", methods=["GET"])
