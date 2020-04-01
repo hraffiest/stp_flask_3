@@ -10,18 +10,24 @@ jwt = JWTManager(app)
 def login():
     if not request.is_json:
         return jsonify({"msg": "Missing JSON in request"}), 400
+
     username = request.json.get("username", "")
     password = request.json.get("password", "")
 
-    if not db.session.query(Participant).filter(Participant.email == username) or password != "test":
-        return jsonify({"msg": "Bad username or password"}), 401
+    user = db.session.query(Participant).filter(Participant.email == username)
+    check_pass = user.password_valid(password)
 
-    access_token = create_access_token(identity=username)
-    return jsonify(access_token=access_token)
+    if not user or not check_pass:
+        return jsonify({"msg": "Bad username or password"}), 400
+    else:
+        return jsonify(email=user.email, name=user.name, about=user.about, picture=user.picture)
 
 
 @app.route("/locations/", methods=["GET"])
 def get_locations_list():
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request"}), 400
+
     locs = db.session.query(Location).all()
     locs_dict = []
     for loc in locs:
@@ -34,31 +40,23 @@ def get_events_list():
     events = db.session.query(Event).all()
     event_type = request.args.get('eventtype')
     location = request.args.get('location')
-    print(event_type,location)
-    print(events)
     events_typed = db.session.query(Event).filter(Event.type == event_type).all()
-    print(events_typed)
     events_locs = db.session.query(Event).filter(Event.loc_id == location).all()
-    print(events_locs)
     events_dict = []
     if event_type and not location:
-        print(hasattr(Event, event_type))
-        if hasattr(Event, event_type):
-            events = events.order_by(getattr(Event, event_type))
+        if events_typed:
+            events = events_typed
         else:
             return jsonify(), 500
     elif location and not event_type:
-        print(2)
-        if hasattr(Event, location):
-            events = events.order_by(db.and_(getattr(Event, location), getattr(Event, event_type)))
+        if events_locs:
+            events = events_locs
         else:
             return jsonify(), 500
     elif location and event_type:
-        print(3)
         if events_locs and events_typed:
-            events = db.session.query(Event).filter(db.and_(Event.location == location,
+            events = db.session.query(Event).filter(db.and_(Event.loc_id == location,
                                                             Event.type == event_type))
-            print(events)
         else:
             return jsonify(), 500
     for e in events:
@@ -82,19 +80,25 @@ def enrollments(event_id):
         enroll = db.session.query(Enrollment).filter(Enrollment.event_id == event_id).all()
         event = db.session.query(Event).get(event_id)
         if not enroll or len(enroll) > event.seats:
-            return jsonify(status='success')
+            return jsonify(status='success'), 200
         else:
             return jsonify(erorr="Not enough seats"), 400
     elif request.method == 'DELETE':
+        if not request.is_json:
+            return jsonify({"msg": "Missing JSON in request"}), 400
         user_id = request.args.get('user_id')
-        enrolls = db.session.query(Enrollment).filter(Enrollment.event_id == event_id).all()
-        db.session.delete(enrolls)
-        db.session.commit(synchronize_session=False)
+        enrolls = db.session.query(Enrollment).filter(db.and_(Enrollment.event_id == event_id,
+                                                              Enrollment.part_id == user_id)).all()
+        for enroll in enrolls:
+            db.session.delete(enroll)
+        db.session.commit()
         return jsonify(status='success')
 
 
 @app.route('/register/', methods=['POST'])
 def register():
+    if not request.is_json:
+        return jsonify({"msg": "Missing JSON in request"}), 400
     name = request.args.get('name')
     email = request.args.get('email')
     about = request.args.get('about')
