@@ -44,8 +44,8 @@ class DashboardView(AdminIndexView):
 
 
 admin = Admin(index_view=DashboardView())
-
-admin.add_view(ParticipantView(name='ИНфа об эвентах', endpoint='events'))
+#
+# admin.add_view(ParticipantView(name='ИНфа об эвентах', endpoint='events'))
 admin.add_view(StatsView(name='Статистика', endpoint='stats'))
 admin.add_view(MailerView(name='Рассылки', endpoint='mailer'))
 admin.add_view(NewModel(Location, db.session))
