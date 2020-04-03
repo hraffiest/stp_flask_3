@@ -1,0 +1,12 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+
+    <h2 class="mt-3">Наша стата будет здесь</h2>
+        <p>Название курса: {{ event.title }}</p>
+        <p>Описание курса: {{ event.description }}</p>
+        <p>Тип курса: {{ event.type }}</p>
+        <p>Категория курса: {{ event.category }}</p>
+        <p>{{ seats }}</p>
+
+{% endblock %}
